@@ -50,5 +50,34 @@
   [ "%{x}t",          1280530906, "2010-07-30 19:01:46" ],
   [ "%{x;datetime}t", 1280530906, "2010-07-30 19:01:46" ],
   [ "%{x;time}t",     1280530906, "19:01:46" ],
-  [ "%{x;date}t",     1280530906, "2010-07-30" ]
+  [ "%{x;date}t",     1280530906, "2010-07-30" ],
+
+  [ "%{x;thing}n",   -1, "-1 thing"  ],
+  [ "%{x;thing}n",    0,  "0 things" ],
+  [ "%{x;thing}n",    1,  "1 thing"  ],
+  [ "%{x;thing}n",    2,  "2 things" ],
+  [ "%{x;thing;+}n", -1, "-1 thing"  ],
+  [ "%{x;thing;+}n",  0, "+0 things" ],
+  [ "%{x;thing;+}n",  1, "+1 thing"  ],
+  [ "%{x;thing;+}n",  2, "+2 things" ],
+
+  [ "%{x;thing}N",   -1, "thing"  ],
+  [ "%{x;thing}N",    0, "things" ],
+  [ "%{x;thing}N",    1, "thing"  ],
+  [ "%{x;thing}N",    2, "things" ],
+  [ "%{x;thing;+}N", -1, "thing"  ],
+  [ "%{x;thing;+}N",  0, "things" ],
+  [ "%{x;thing;+}N",  1, "thing"  ],
+  [ "%{x;thing;+}N",  2, "things" ],
+
+  [ "%{x;ox+en}N",        1,  "ox"    ],
+  [ "%{x;ox+en}N",        2,  "oxen"  ],
+  [ "%{x;goose/geese}N",  1,  "goose" ],
+  [ "%{x;goose/geese}N",  2,  "geese" ],
+
+  [ "%{x;box}N",      2,  "boxes"   ],
+  [ "%{x;buzz}N",     2,  "buzzes"  ],
+  [ "%{x;mass}N",     2,  "masses"  ],
+  [ "%{x;lush}N",     2,  "lushes"  ],
+  [ "%{x;party}N",    2,  "parties" ]
 ]
