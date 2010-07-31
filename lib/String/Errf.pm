@@ -187,7 +187,7 @@ sub _format_numbered {
              : $divider   eq '/'              ? $extra
              : $divider   eq '+'              ? "$singular$extra"
              : $singular  =~ /(?:[xzs]|sh)\z/ ? "${singular}es"
-             # xy -> xies -- rjbs, 2010-07-30
+             : $singular  =~ s/y\z/ies/       ? $singular
              :                                  "${singular}s";
 
   return $hunk->{conversion} eq 'N'
