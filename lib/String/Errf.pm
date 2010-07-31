@@ -1,10 +1,36 @@
 use 5.12.0;
 use warnings;
 package String::Errf;
+use base 'String::Formatter';
 
 use Carp ();
 use Date::Format ();
 use Params::Util ();
+
+use Sub::Exporter -setup => {
+  exports => {
+    errf => sub {
+      my ($class) = @_;
+      my $fmt = $class->new({
+        input_processor => 'require_named_input',
+        format_hunker   => '__hunk_errf',
+        string_replacer => '__replace_errf',
+        hunk_formatter  => '__format_errf',
+
+        codes => {
+          i => '_format_int',
+          f => '_format_float',
+          t => '_format_timestamp',
+          s => '_format_string',
+          n => '_format_numbered',
+          N => '_format_numbered',
+        },
+      });
+
+      return sub { $fmt->format(@_) };
+    },
+  }
+};
 
 my $regex = qr/
  (%                   # leading '%'
@@ -101,17 +127,11 @@ sub _format_int {
 }
 
 
-# fillchar (0)
-# precision
-# minwidth
-# maxwidth
-# prefix (like '+' or ' ') ??
-
 # Likely float formatting options are:
 #   prefix (+ or SPACE for positive numbers)
 #   precision
 #
-#
+# My remarks above for "int" go for floats, too. -- rjbs, 2010-07-30
 sub _format_float {
   my ($self, $value, $rest) = @_;
 
@@ -174,32 +194,5 @@ sub _format_numbered {
        ? $formed
        : $self->_format_float($value, $rest, $hunk) . " $formed";
 }
-
-use base 'String::Formatter';
-
-use Sub::Exporter -setup => {
-  exports => {
-    errf => sub {
-      my ($class) = @_;
-      my $fmt = $class->new({
-        input_processor => 'require_named_input',
-        format_hunker   => '__hunk_errf',
-        string_replacer => '__replace_errf',
-        hunk_formatter  => '__format_errf',
-
-        codes => {
-          i => '_format_int',
-          f => '_format_float',
-          t => '_format_timestamp',
-          s => '_format_string',
-          n => '_format_numbered',
-          N => '_format_numbered',
-        },
-      });
-
-      return sub { $fmt->format(@_) };
-    },
-  }
-};
 
 1;
