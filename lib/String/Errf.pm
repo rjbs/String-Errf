@@ -168,6 +168,7 @@ sub _format_timestamp {
              : $type eq 'time'     ? '%T'
              : Carp::croak("unknown format type for %t: $type");
 
+  # Supplying a time zone is *strictly informational*. -- rjbs, 2010-10-15
   Carp::croak("illegal time zone for %t: $zone")
     unless $zone eq 'local' or $zone eq 'UTC';
 
