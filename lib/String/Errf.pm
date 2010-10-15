@@ -161,12 +161,17 @@ sub _format_timestamp {
   my ($self, $value, $rest) = @_;
 
   my $type   = $rest->[0] || 'datetime';
+  my $zone   = $rest->[1] || 'local';
+
   my $format = $type eq 'datetime' ? '%Y-%m-%d %T'
              : $type eq 'date'     ? '%Y-%m-%d'
              : $type eq 'time'     ? '%T'
-             : Carp::croak("unknown format type for %t: %type");
+             : Carp::croak("unknown format type for %t: $type");
 
-  return Date::Format::time2str($format, $value);
+  Carp::croak("illegal time zone for %t: $zone")
+    unless $zone eq 'local' or $zone eq 'UTC';
+
+  return Date::Format::time2str($format, $value, ($zone eq 'UTC' ? 'UTC' : ()));
 }
 
 sub _format_string {

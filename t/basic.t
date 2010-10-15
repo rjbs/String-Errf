@@ -16,7 +16,9 @@ sub errf_is {
   is($have, $want, $desc);
 }
 
-my %time = (
+$ENV{TZ} = 'America/New_York';
+
+my %local_time = (
   secs => 1280530906,
   full => '2010-07-30 19:01:46',
   time => '19:01:46',
@@ -54,10 +56,10 @@ is(
     {
       user => 'rjbs',
       dogs => 5,
-      lunch_time => $time{secs},
+      lunch_time => $local_time{secs},
     },
   ),
-  "at $time{full}, rjbs tried to eat 5 hot dogs",
+  "at $local_time{full}, rjbs tried to eat 5 hot dogs",
   "simple test for %t, %s, %n",
 );
 
