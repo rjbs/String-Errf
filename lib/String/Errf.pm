@@ -5,6 +5,8 @@ use String::Formatter 0.102081 ();
 use base 'String::Formatter';
 # ABSTRACT: a simple sprintf-like dialect
 
+use Scalar::Util ();
+
 =head1 SYNOPSIS
 
   use String::Errf qw(errf);
@@ -101,26 +103,27 @@ use Sub::Exporter -setup => {
   exports => {
     errf => sub {
       my ($class) = @_;
-      my $fmt = $class->new({
-        input_processor => 'require_named_input',
-        format_hunker   => '__hunk_errf',
-        string_replacer => '__replace_errf',
-        hunk_formatter  => '__format_errf',
-
-        codes => {
-          i => '_format_int',
-          f => '_format_float',
-          t => '_format_timestamp',
-          s => '_format_string',
-          n => '_format_numbered',
-          N => '_format_numbered',
-        },
-      });
-
+      my $fmt = $class->new;
       return sub { $fmt->format(@_) };
     },
   }
 };
+
+sub default_codes {
+  return {
+    i => '_format_int',
+    f => '_format_float',
+    t => '_format_timestamp',
+    s => '_format_string',
+    n => '_format_numbered',
+    N => '_format_numbered',
+  };
+}
+
+sub default_input_processor { 'require_named_input' }
+sub default_format_hunker   { '__hunk_errf' }
+sub default_string_replacer { '__replace_errf' }
+sub default_hunk_formatter  { '__format_errf' }
 
 my $regex = qr/
  (%                   # leading '%'
@@ -183,9 +186,32 @@ sub __format_errf {
   return $self->$conv($hunk->{replacement}, $hunk->{args}, $hunk);
 }
 
+sub _proc_args {
+  my ($self, $input, $parse_compact) = @_;
+
+  return $input if ref $input eq 'HASH';
+
+  $parse_compact ||= sub {
+    Carp::croak("no compact format allowed, but compact format found");
+  };
+
+  my @args = @$input;
+
+  my $first = (defined $args[0] and length $args[0] and $args[0] !~ /=/)
+            ? shift @args
+            : undef;
+
+  my %param = (
+    ($first ? %{ $parse_compact->($first) } : ()),
+    (map {; split /=/, $_, 2 } @args),
+  );
+
+  return \%param;
+}
+
 # Likely integer formatting options are:
 #   prefix (+ or SPACE for positive numbers)
-# 
+#
 # Other options like (minwidth, precision, fillchar) are not out of the
 # question, but if this system is to be used for formatting simple
 # user-oriented error messages, they seem really unlikely to be used.  Put off
@@ -196,24 +222,22 @@ sub __format_errf {
 sub _format_int {
   my ($self, $value, $rest) = @_;
 
-  my $first = (defined $rest->[0] and $rest->[0] !~ /=/)
-            ? shift @$rest
-            : '';
+  my $arg = $self->_proc_args($rest, sub {
+    my $prefix = index($_[0], '+') >= 0 ? '+'
+               : index($_[0], ' ') >= 0 ? ' '
+               :                          '';
 
-  $value = int $value;
+    return { prefix => $prefix };
+  });
+
+  my $int_value = int $value;
+  $value = sprintf '%.0f', $value unless $int_value == $value;
 
   return $value if $value < 0;
 
-  my $prefix = index($first, '+') >= 0 ? '+'
-             : index($first, ' ') >= 0 ? ' '
-             :                           '';
+  $arg->{prefix} = '' unless defined $arg->{prefix};
 
-  my %arg = (
-    prefix => $prefix,
-    (map {; split /=/, $_, 2 } @$rest)
-  );
-
-  return "$arg{prefix}$value";
+  return "$arg->{prefix}$value";
 }
 
 
@@ -225,33 +249,32 @@ sub _format_int {
 sub _format_float {
   my ($self, $value, $rest) = @_;
 
-  my $first = (defined $rest->[0] and $rest->[0] !~ /=/)
-            ? shift @$rest
-            : '';
+  my $arg = $self->_proc_args($rest, sub {
+    my ($prefix_str, $prec) = $_[0] =~ /\A([ +]?)(?:\.(\d+))?\z/;
+    return { prefix => $prefix_str, precision => $prec };
+  });
 
-  my ($prefix_str, $prec) = $first =~ /\A([ +]*)(?:\.(\d+))?\z/;
-  undef $prec if defined $prec and ! length $prec;
+  undef $arg->{precision}
+    unless defined $arg->{precision} and length $arg->{precision};
 
-  my $prefix = index($first, '+') >= 0 ? '+'
-             : index($first, ' ') >= 0 ? ' '
-             :                           '';
+  $arg->{prefix} = '' unless defined $arg->{prefix};
 
-  my %arg = (
-    prefix    => $prefix,
-    precision => $prec, 
-    (map {; split /=/, $_, 2 } @$rest)
-  );
+  $value = defined $arg->{precision}
+         ? sprintf("%0.$arg->{precision}f", $value)
+         : $value;
 
-  $value = defined $prec ?  sprintf("%0.${prec}f", $value) : $value;
-
-  return $value < 0 ? $value : "$arg{prefix}$value";
+  return $value < 0 ? $value : "$arg->{prefix}$value";
 }
 
 sub _format_timestamp {
   my ($self, $value, $rest) = @_;
 
-  my $type   = $rest->[0] || 'datetime';
-  my $zone   = $rest->[1] || 'local';
+  my $arg = $self->_proc_args($rest, sub {
+    return { type => $_[0] };
+  });
+
+  my $type = $arg->{type} || 'datetime';
+  my $zone = $arg->{tz}   || 'local';
 
   my $format = $type eq 'datetime' ? '%Y-%m-%d %T'
              : $type eq 'date'     ? '%Y-%m-%d'
@@ -273,22 +296,32 @@ sub _format_string {
 sub _format_numbered {
   my ($self, $value, $rest, $hunk) = @_;
 
-  my $word = shift @$rest;
-  
-  my ($singular, $divider, $extra) = $word =~ m{\A(.+?)(?: ([/+]) (.+) )?\z}x;
+  my $arg = $self->_proc_args($rest, sub {
+    my ($word) = @_;
 
-  $divider = '' unless defined $divider; # just to avoid warnings
+    my ($singular, $divider, $extra) = $word =~ m{\A(.+?)(?: ([/+]) (.+) )?\z}x;
 
-  my $formed = abs($value) == 1                  ? $singular
-             : $divider   eq '/'                 ? $extra
-             : $divider   eq '+'                 ? "$singular$extra"
-             : $singular  =~ /(?:[xzs]|sh|ch)\z/ ? "${singular}es"
-             : $singular  =~ s/y\z/ies/          ? $singular
-             :                                   "${singular}s";
+    $divider = '' unless defined $divider; # just to avoid warnings
 
-  return $hunk->{conversion} eq 'N'
-       ? $formed
-       : $self->_format_float($value, $rest, $hunk) . " $formed";
+    my $plural = $divider   eq '/'                 ? $extra
+               : $divider   eq '+'                 ? "$singular$extra"
+               : $singular  =~ /(?:[xzs]|sh|ch)\z/ ? "${singular}es"
+               : $singular  =~ s/y\z/ies/          ? $singular
+               :                                     "${singular}s";
+
+    return { singular => $singular, plural => $plural };
+  });
+
+  my $formed = abs($value) == 1 ? $arg->{singular} : $arg->{plural};
+
+  return $formed if $hunk->{conversion} eq 'N';
+
+  return sprintf '%s %s',
+    $self->_format_float($value, {
+      prefix    => $arg->{prefix},
+      precision => $arg->{precision},
+    }),
+    $formed;
 }
 
 1;
