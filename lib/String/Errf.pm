@@ -2,6 +2,7 @@ use 5.12.0;
 use warnings;
 package String::Errf;
 use base 'String::Formatter';
+# ABSTRACT: a simple sprintf-like dialect
 
 use Carp ();
 use Date::Format ();
