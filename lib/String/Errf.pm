@@ -1,8 +1,97 @@
 use 5.12.0;
 use warnings;
-package String::Errf;
+package String::Errf; # I really wanted to call it String::Fister.
+use String::Formatter 0.102081 ();
 use base 'String::Formatter';
 # ABSTRACT: a simple sprintf-like dialect
+
+=head1 SYNOPSIS
+
+  use String::Errf qw(errf);
+
+  print errf "This process was started at %{start}t with %{args;argument}n.\n",
+    { start => $^T, args => 0 + @ARGV };
+
+...might print something like:
+
+  This process was started at 2010-10-17 14:05:29 with 0 arguments.
+
+=head1 DESCRIPTION
+
+String::Errf provides C<errf>, a simple string formatter that works something
+like C<L<sprintf|perlfunc/sprintf>>.  It is implemented using
+L<String::Formatter> and L<Sub::Exporter>.  Their documentation may be useful
+in understanding or extending String::Errf.
+
+=head1 DIFFERENCES FROM SPRINTF
+
+The data passed to C<errf> should be organized in a single hashref, not a list.
+
+Formatting codes require named parameters, and the available codes are
+different.  See L</FORMATTING CODES> below.
+
+As with most String::Formatter formatters, C<%> is not a format code.  If you
+want a literal C<%>, do not put anything between the two percent signs, just
+write C<%%>.
+
+=head2 FORMATTING CODES
+
+C<errf> formatting codes I<require> a set of arguments between the C<%> and the
+formatting code letter.  These arguments are placed in curly braces and
+separated by semicolons.  The first argument is the name of the data to look
+for in the format data.  For example, this is a valid use of C<errf>:
+
+  errf "The current time in %{tz}s is %{now;local}t.", {
+    tz  => $ENV{TZ},
+    now => time,
+  };
+
+The second argument, if present, may be a compact form for multiple named
+arguments.  The rest of the arguments will be named values in the form
+C<name=value>.  The examples below should help clarify how arguments are
+passed.  When an argument appears in both a compact and named form, the named
+form trumps the compact form.
+
+The specific codes and their arguments are:
+
+=head3 i for integer
+
+The C<i> format code is used for integers.  It takes one optional argument,
+C<prefix>, which defaults to the empty string.  C<prefix> may be given as the
+compact argument, standing alone.  C<prefix> is used to prefix non-negative
+integers.  It may be a space or a plus sign.
+
+  errf "%{x}i",    10; # returns "10"
+  errf "%{x;+}i",  10; # returns "+10"
+  errf "%{x; }i",  10; # returns " 10"
+  errf "%{x; }i", -10; # returns "-10"
+
+  errf "%{x;prefix=+}i",  10; # returns "+10"
+  errf "%{x;prefix= }i",  10; # returns " 10"
+
+The rounding behavior for non-integer values I<is not currently specified>.
+
+=head3 f for float (or fractional)
+
+The C<f> format code is for numbers with sub-integer precision.  It works just
+like C<i>, but adds a C<precision> argument which specifies how many decimal
+places of precision to display.  The compact argument may be just the prefix or
+the prefix followed by a period followed by the precision.
+
+  errf "%{x}f",     10.1234; # returns "10";
+  errf "%{x;+}f",   10.1234; # returns "+10";
+  errf "%{x; }f",   10.1234; # returns " 10";
+
+  errf "%{x;.2}f",  10.1234; # returns  "10.12";
+  errf "%{x;+.2}f", 10.1234; # returns "+10.12";
+  errf "%{x; .2}f", 10.1234; # returns " 10.12";
+
+  errf "%{x;precision=.2}f",          10.1234; # returns  "10.12";
+  errf "%{x;prefix=+;precision=.2}f", 10.1234; # returns "+10.12";
+
+=head3
+
+=cut
 
 use Carp ();
 use Date::Format ();
