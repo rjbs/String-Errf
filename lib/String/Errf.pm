@@ -190,12 +190,12 @@ sub _format_numbered {
 
   $divider = '' unless defined $divider; # just to avoid warnings
 
-  my $formed = abs($value) == 1               ? $singular
-             : $divider   eq '/'              ? $extra
-             : $divider   eq '+'              ? "$singular$extra"
-             : $singular  =~ /(?:[xzs]|sh)\z/ ? "${singular}es"
-             : $singular  =~ s/y\z/ies/       ? $singular
-             :                                  "${singular}s";
+  my $formed = abs($value) == 1                  ? $singular
+             : $divider   eq '/'                 ? $extra
+             : $divider   eq '+'                 ? "$singular$extra"
+             : $singular  =~ /(?:[xzs]|sh|ch)\z/ ? "${singular}es"
+             : $singular  =~ s/y\z/ies/          ? $singular
+             :                                   "${singular}s";
 
   return $hunk->{conversion} eq 'N'
        ? $formed
