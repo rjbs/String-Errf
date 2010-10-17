@@ -28,7 +28,7 @@ my %local_time = (
 my $tests = do {
   use autodie;
   my $json = do {
-    open my $fh, '<', 'tests.json';
+    open my $fh, '<', 't/tests.json';
     local $/;
     <$fh>;
   };
