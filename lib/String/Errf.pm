@@ -56,20 +56,27 @@ form trumps the compact form.
 
 The specific codes and their arguments are:
 
+=head3 s for string
+
+The C<s> format code is for any string, and takes no arguments.  It just
+includes the named item from the input data.
+
+  errf "%{name}s", { name => 'John Smith' }; # returns "John Smith"
+
+Remember, C<errf> does I<not> have any of the left- or right-padding formatting
+that C<sprintf> provides.  It is not meant for building tables, only strings.
+
 =head3 i for integer
 
 The C<i> format code is used for integers.  It takes one optional argument,
 C<prefix>, which defaults to the empty string.  C<prefix> may be given as the
 compact argument, standing alone.  C<prefix> is used to prefix non-negative
-integers.  It may be a space or a plus sign.
+integers.  It may only be a plus sign.
 
-  errf "%{x}i",    10; # returns "10"
-  errf "%{x;+}i",  10; # returns "+10"
-  errf "%{x; }i",  10; # returns " 10"
-  errf "%{x; }i", -10; # returns "-10"
+  errf "%{x}i",    { x => 10 }; # returns "10"
+  errf "%{x;+}i",  { x => 10 }; # returns "+10"
 
-  errf "%{x;prefix=+}i",  10; # returns "+10"
-  errf "%{x;prefix= }i",  10; # returns " 10"
+  errf "%{x;prefix=+}i",  { x => 10 }; # returns "+10"
 
 The rounding behavior for non-integer values I<is not currently specified>.
 
@@ -80,16 +87,78 @@ like C<i>, but adds a C<precision> argument which specifies how many decimal
 places of precision to display.  The compact argument may be just the prefix or
 the prefix followed by a period followed by the precision.
 
-  errf "%{x}f",     10.1234; # returns "10";
-  errf "%{x;+}f",   10.1234; # returns "+10";
-  errf "%{x; }f",   10.1234; # returns " 10";
+  errf "%{x}f",     { x => 10.1234 }; # returns "10";
+  errf "%{x;+}f",   { x => 10.1234 }; # returns "+10";
 
-  errf "%{x;.2}f",  10.1234; # returns  "10.12";
-  errf "%{x;+.2}f", 10.1234; # returns "+10.12";
-  errf "%{x; .2}f", 10.1234; # returns " 10.12";
+  errf "%{x;.2}f",  { x => 10.1234 }; # returns  "10.12";
+  errf "%{x;+.2}f", { x => 10.1234 }; # returns "+10.12";
 
-  errf "%{x;precision=.2}f",          10.1234; # returns  "10.12";
-  errf "%{x;prefix=+;precision=.2}f", 10.1234; # returns "+10.12";
+  errf "%{x;precision=.2}f",          { x => 10.1234 }; # returns  "10.12";
+  errf "%{x;prefix=+;precision=.2}f", { x => 10.1234 }; # returns "+10.12";
+
+=head3 t for time
+
+The C<t> format code is used to format timestamps provided in epoch seconds.
+It can be given two arguments: C<type> and C<tz>.
+
+C<type> can be either date, time, or datetime, and indicates what part of the
+timestamp should be displayed.  The default is datetime.  C<tz> requests that
+the timestamp be displayed in either UTC or the local time zone.  The default
+is local.
+
+The compact form is just C<type> alone.
+
+  # Assuming our local time zone is America/New_York...
+
+  errf "%{x}t",               { x => 1280530906 }; # "2010-07-30 19:01:46"
+  errf "%{x;type=date}t",     { x => 1280530906 }; # "2010-07-30"
+  errf "%{x;type=time}t",     { x => 1280530906 }; # "19:01:46"
+  errf "%{x;type=datetime}t", { x => 1280530906 }; # "2010-07-30 19:01:46"
+
+  errf "%{x;tz=UTC}t",               { x => 1280530906 }; # "2010-07-30 23:01:46 UTC"
+  errf "%{x;tz=UTC;type=date}t",     { x => 1280530906 }; # "2010-07-30 UTC"
+  errf "%{x;tz=UTC;type=time}t",     { x => 1280530906 }; # "23:01:46 UTC"
+  errf "%{x;tz=UTC;type=datetime}t", { x => 1280530906 }; # "2010-07-30 23:01:46 UTC"
+
+=head3 n and N for numbered
+
+The C<n> and C<N> format codes are for picking words based on number.  It takes
+two of its own arguments, C<singular> and C<plural>, as well as C<prefix> and
+C<precision> which may be used for formatting the number itself.
+
+If the value being formatted is 1, the singular word is used.  Otherwise, the
+plural form is used.
+
+  errf "%{x;singular=dog;plural=dogs}n", { x => 0 }; # 0 dogs
+  errf "%{x;singular=dog;plural=dogs}n", { x => 1 }; # 1 dog
+  errf "%{x;singular=dog;plural=dogs}n", { x => 2 }; # 2 dogs
+
+  errf "%{x;singular=dog;plural=dogs}n", { x => 1.4 }; # 1.4 dogs
+  errf "%{x;singular=dog;plural=dogs;precision=1}n", { x => 1.4 }; # 1.4 dogs
+  errf "%{x;singular=dog;plural=dogs;precision=0}n", { x => 1.4 }; # 1 dog
+
+If C<N> is used instead of C<n>, the number will not be included, only the
+chosen word.
+
+  errf "%{x;singular=is;plural=are}N", { x => 0 }; # are
+  errf "%{x;singular=is;plural=are}N", { x => 1 }; # is
+  errf "%{x;singular=is;plural=are}N", { x => 2 }; # are
+
+  errf "%{x;singular=is;plural=are}N", { x => 1.4 }; # 1.4 are
+  errf "%{x;singular=is;plural=are;precision=1}N", { x => 1.4 }; # 1.4 are
+  errf "%{x;singular=is;plural=are;precision=0}N", { x => 1.4 }; # 1 is
+
+The compact form may take any of the following forms:
+
+  word          - equivalent to singular=word
+
+  word+suffix   - equivalent to singular=word;plural=wordsuffix
+
+  word1/word2   - equivalent to singular=word;plural=word2
+
+If no singular form is given, an exception is thrown.  If no plural form is
+given, one will be generated according to some basic rules of English
+noun orthography.
 
 =head3
 
@@ -210,24 +279,17 @@ sub _proc_args {
 }
 
 # Likely integer formatting options are:
-#   prefix (+ or SPACE for positive numbers)
+#   prefix (+ for positive numbers)
 #
 # Other options like (minwidth, precision, fillchar) are not out of the
 # question, but if this system is to be used for formatting simple
 # user-oriented error messages, they seem really unlikely to be used.  Put off
 # supplying them! -- rjbs, 2010-07-30
-#
-# I'm not even sure that a SPACE prefix is useful, since we're not likely to be
-# aligning many of these errors. -- rjbs, 2010-07-30
 sub _format_int {
   my ($self, $value, $rest) = @_;
 
   my $arg = $self->_proc_args($rest, sub {
-    my $prefix = index($_[0], '+') >= 0 ? '+'
-               : index($_[0], ' ') >= 0 ? ' '
-               :                          '';
-
-    return { prefix => $prefix };
+    return { prefix => $_[0] eq '+' ? '+' : '', }
   });
 
   my $int_value = int $value;
@@ -242,7 +304,7 @@ sub _format_int {
 
 
 # Likely float formatting options are:
-#   prefix (+ or SPACE for positive numbers)
+#   prefix (+ for positive numbers)
 #   precision
 #
 # My remarks above for "int" go for floats, too. -- rjbs, 2010-07-30
@@ -250,7 +312,7 @@ sub _format_float {
   my ($self, $value, $rest) = @_;
 
   my $arg = $self->_proc_args($rest, sub {
-    my ($prefix_str, $prec) = $_[0] =~ /\A([ +]?)(?:\.(\d+))?\z/;
+    my ($prefix_str, $prec) = $_[0] =~ /\A(\+?)(?:\.(\d+))?\z/;
     return { prefix => $prefix_str, precision => $prec };
   });
 
@@ -285,12 +347,26 @@ sub _format_timestamp {
   Carp::croak("illegal time zone for %t: $zone")
     unless $zone eq 'local' or $zone eq 'UTC';
 
-  return Date::Format::time2str($format, $value, ($zone eq 'UTC' ? 'UTC' : ()));
+  my $str = Date::Format::time2str(
+    $format,
+    $value,
+    ($zone eq 'UTC' ? 'UTC' : ()),
+  );
+
+  return $zone eq 'UTC' ? "$str UTC" : $str;
 }
 
 sub _format_string {
   my ($self, $value, $rest) = @_;
   return $value;
+}
+
+sub _pluralize {
+  my ($singular) = @_;
+
+  return $singular  =~ /(?:[xzs]|sh|ch)\z/ ? "${singular}es"
+       : $singular  =~ s/y\z/ies/          ? $singular
+       :                                     "${singular}s";
 }
 
 sub _format_numbered {
@@ -305,23 +381,25 @@ sub _format_numbered {
 
     my $plural = $divider   eq '/'                 ? $extra
                : $divider   eq '+'                 ? "$singular$extra"
-               : $singular  =~ /(?:[xzs]|sh|ch)\z/ ? "${singular}es"
-               : $singular  =~ s/y\z/ies/          ? $singular
-               :                                     "${singular}s";
+               :                                     _pluralize($singular);
 
     return { singular => $singular, plural => $plural };
   });
 
+  $value = $self->_format_float($value, {
+    prefix    => $arg->{prefix},
+    precision => $arg->{precision},
+  });
+
+  Carp::croak("no word given to number-based formatter")
+    unless defined $arg->{singular};
+
+  $arg->{plural} = _pluralize($arg->{singular}) unless defined $arg->{plural};
+
   my $formed = abs($value) == 1 ? $arg->{singular} : $arg->{plural};
 
   return $formed if $hunk->{conversion} eq 'N';
-
-  return sprintf '%s %s',
-    $self->_format_float($value, {
-      prefix    => $arg->{prefix},
-      precision => $arg->{precision},
-    }),
-    $formed;
+  return "$value $formed";
 }
 
 1;
