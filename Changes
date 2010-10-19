@@ -1,6 +1,8 @@
 Release history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.002     2010-10-19 07:44:50 America/New_York
           remove the unneeded prerequisite on perl 5.12
 
 0.001     2010-10-18 21:40:38 America/New_York
