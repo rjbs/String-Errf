@@ -2,4 +2,6 @@ Release history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.001     2010-10-18 21:40:38 America/New_York
+
           first release
