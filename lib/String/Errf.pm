@@ -1,4 +1,4 @@
-use 5.12.0;
+use strict;
 use warnings;
 package String::Errf; # I really wanted to call it String::Fister.
 use String::Formatter 0.102081 ();
