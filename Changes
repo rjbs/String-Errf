@@ -2,6 +2,9 @@ Release history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.003     2010-10-20 22:52:10 America/New_York
+          on non-New-York time zones, skip the non-UTC TZ tests
+
 0.002     2010-10-19 07:44:50 America/New_York
           remove the unneeded prerequisite on perl 5.12
 
