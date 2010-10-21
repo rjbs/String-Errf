@@ -2,6 +2,9 @@ Release history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.004     2010-10-21 17:05:54 America/New_York
+          more test fixes (Thanks, Pedro Melo!)
+
 0.003     2010-10-20 22:52:10 America/New_York
           on non-New-York time zones, skip the non-UTC TZ tests
 
