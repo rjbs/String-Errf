@@ -65,7 +65,7 @@ is(
   ),
   "at $local_time{full}, rjbs tried to eat 5 hot dogs",
   "simple test for %t, %s, %n",
-);
+) unless $skip_local;
 
 is(
   errf("There %{lights;is+are}N %{lights;light}n.", { lights => 1 }),
