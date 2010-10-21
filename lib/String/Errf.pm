@@ -165,7 +165,7 @@ noun orthography.
 =cut
 
 use Carp ();
-use Date::Format ();
+use Time::Piece ();
 use Params::Util ();
 
 use Sub::Exporter -setup => {
@@ -347,11 +347,10 @@ sub _format_timestamp {
   Carp::croak("illegal time zone for %t: $zone")
     unless $zone eq 'local' or $zone eq 'UTC';
 
-  my $str = Date::Format::time2str(
-    $format,
-    $value,
-    ($zone eq 'UTC' ? 'UTC' : ()),
-  );
+  my $method = $zone eq 'UTC' ? 'gmtime' : 'localtime';
+  my $piece  = Time::Piece->$method($value);
+
+  my $str = $piece->strftime($format);
 
   return $zone eq 'UTC' ? "$str UTC" : $str;
 }
