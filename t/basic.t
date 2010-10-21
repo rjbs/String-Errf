@@ -1,7 +1,7 @@
 use strict;
 use warnings;
 
-use Test::More;
+use Test::More tests => 2;
 
 use Date::Format qw(time2str);
 use JSON 2 ();
@@ -36,44 +36,48 @@ my $tests = do {
 
 my $skip_local = scalar(localtime 1280530906) ne 'Fri Jul 30 19:01:46 2010';
 
-for my $test (@$tests) {
-  # TOTALLY AWFUL HACK:
-  local $TODO = 'figure out time zone tests'
-    if $skip_local and $test->[1] == 1280530906 and $test->[0] !~ /UTC/;
+subtest "tests from json file" => sub {
+  plan tests => 0 + @$tests;
 
-  errf_is(@$test);
-}
+  for my $test (@$tests) {
+    # TOTALLY AWFUL HACK:
+    local $TODO = 'figure out time zone tests'
+      if $skip_local and $test->[1] == 1280530906 and $test->[0] !~ /UTC/;
 
-is(
-  errf(
-    "%{booze}s and %{mixer}s", {
-    booze => 'gin',
-    mixer => 'tonic',
-  }),
-  "gin and tonic",
-  "gin and tonic",
-);
+    errf_is(@$test);
+  }
+};
 
-{
-  local $TODO = 'figure out time zone tests' if $skip_local;
+subtest "misc. one-off tests" => sub {
   is(
     errf(
-      "at %{lunch_time}t, %{user}s tried to eat %{dogs;hot dog}n",
-      {
-        user => 'rjbs',
-        dogs => 5,
-        lunch_time => $local_time{secs},
-      },
-    ),
-    "at $local_time{full}, rjbs tried to eat 5 hot dogs",
-    "simple test for %t, %s, %n",
+      "%{booze}s and %{mixer}s", {
+      booze => 'gin',
+      mixer => 'tonic',
+    }),
+    "gin and tonic",
+    "gin and tonic",
   );
-}
 
-is(
-  errf("There %{lights;is+are}N %{lights;light}n.", { lights => 1 }),
-  "There is 1 light.",
-  "some inflections",
-);
+  {
+    local $TODO = 'figure out time zone tests' if $skip_local;
+    is(
+      errf(
+        "at %{lunch_time}t, %{user}s tried to eat %{dogs;hot dog}n",
+        {
+          user => 'rjbs',
+          dogs => 5,
+          lunch_time => $local_time{secs},
+        },
+      ),
+      "at $local_time{full}, rjbs tried to eat 5 hot dogs",
+      "simple test for %t, %s, %n",
+    );
+  }
 
-done_testing;
+  is(
+    errf("There %{lights;is+are}N %{lights;light}n.", { lights => 1 }),
+    "There is 1 light.",
+    "some inflections",
+  );
+};
