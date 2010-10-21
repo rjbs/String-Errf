@@ -54,18 +54,21 @@ is(
   "gin and tonic",
 );
 
-is(
-  errf(
-    "at %{lunch_time}t, %{user}s tried to eat %{dogs;hot dog}n",
-    {
-      user => 'rjbs',
-      dogs => 5,
-      lunch_time => $local_time{secs},
-    },
-  ),
-  "at $local_time{full}, rjbs tried to eat 5 hot dogs",
-  "simple test for %t, %s, %n",
-) unless $skip_local;
+{
+  local $TODO = 'figure out time zone tests' if $skip_local;
+  is(
+    errf(
+      "at %{lunch_time}t, %{user}s tried to eat %{dogs;hot dog}n",
+      {
+        user => 'rjbs',
+        dogs => 5,
+        lunch_time => $local_time{secs},
+      },
+    ),
+    "at $local_time{full}, rjbs tried to eat 5 hot dogs",
+    "simple test for %t, %s, %n",
+  );
+}
 
 is(
   errf("There %{lights;is+are}N %{lights;light}n.", { lights => 1 }),
