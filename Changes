@@ -1,6 +1,8 @@
 Release history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.006     2010-10-28 22:20:42 America/New_York
           avoid non-portable %T strftime format
 
 0.005     2010-10-23 22:18:55 America/New_York
