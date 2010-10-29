@@ -338,9 +338,9 @@ sub _format_timestamp {
   my $type = $arg->{type} || 'datetime';
   my $zone = $arg->{tz}   || 'local';
 
-  my $format = $type eq 'datetime' ? '%Y-%m-%d %T'
+  my $format = $type eq 'datetime' ? '%Y-%m-%d %H:%M:%S'
              : $type eq 'date'     ? '%Y-%m-%d'
-             : $type eq 'time'     ? '%T'
+             : $type eq 'time'     ? '%H:%M:%S'
              : Carp::croak("unknown format type for %t: $type");
 
   # Supplying a time zone is *strictly informational*. -- rjbs, 2010-10-15
