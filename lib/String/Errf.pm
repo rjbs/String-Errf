@@ -2,7 +2,7 @@ use strict;
 use warnings;
 package String::Errf; # I really wanted to call it String::Fister.
 use String::Formatter 0.102081 ();
-use base 'String::Formatter';
+use parent 'String::Formatter';
 # ABSTRACT: a simple sprintf-like dialect
 
 use Scalar::Util ();
