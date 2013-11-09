@@ -23,7 +23,9 @@ use Scalar::Util ();
 String::Errf provides C<errf>, a simple string formatter that works something
 like C<L<sprintf|perlfunc/sprintf>>.  It is implemented using
 L<String::Formatter> and L<Sub::Exporter>.  Their documentation may be useful
-in understanding or extending String::Errf.
+in understanding or extending String::Errf.  The C<errf> subroutine is only
+available when imported.  Calling L<String::Errf::errf> will not do what you
+want.
 
 =head1 DIFFERENCES FROM SPRINTF
 
