@@ -2,6 +2,11 @@ Release history for {{$dist->name}}
 
 {{$NEXT}}
 
+0.007     2013-11-24 13:46:17 America/New_York
+          catch more bad input and die [rt.cpan.org #83552]
+
+          update repository and bugtracker metadata
+
 0.006     2010-10-28 22:20:42 America/New_York
           avoid non-portable %T strftime format
 
