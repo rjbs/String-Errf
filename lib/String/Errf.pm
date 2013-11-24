@@ -197,12 +197,12 @@ sub default_string_replacer { '__replace_errf' }
 sub default_hunk_formatter  { '__format_errf' }
 
 my $regex = qr/
- (%                   # leading '%'
-  (?:{                # {
-    (.*?)             #   mandatory argument name
-    (?: ; (.*?) )?    #   optional extras after semicolon
-  })                  # }
-  ([a-z])             # actual conversion character
+ (%                      # leading '%'
+  (?:{                   # {
+    ([^;]*?)             #   mandatory argument name
+    (?: ; ([^\}]*?) )?   #   optional extras after semicolon
+  })                     # }
+  ($|.)                  # potential conversion character
  )
 /xi;
 
