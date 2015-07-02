@@ -1,6 +1,7 @@
 Release history for {{$dist->name}}
 
 {{$NEXT}}
+          - switch from JSON to JSON::MaybeXS
 
 0.007     2013-11-24 13:46:17 America/New_York
           catch more bad input and die [rt.cpan.org #83552]
