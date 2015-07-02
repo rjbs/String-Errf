@@ -4,7 +4,7 @@ use warnings;
 use Test::More tests => 2;
 
 use Date::Format qw(time2str);
-use JSON 2 ();
+use JSON::MaybeXS;
 use String::Errf qw(errf);
 
 sub errf_is {
@@ -31,7 +31,7 @@ my $tests = do {
     <$fh>;
   };
 
-  JSON->new->decode($json);
+  decode_json($json);
 };
 
 my $skip_local = scalar(localtime 1280530906) ne 'Fri Jul 30 19:01:46 2010';
