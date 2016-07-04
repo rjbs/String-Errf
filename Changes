@@ -1,6 +1,8 @@
 Release history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.008     2016-07-04 11:37:17-04:00 America/New_York
           - switch from JSON to JSON::MaybeXS
 
 0.007     2013-11-24 13:46:17 America/New_York
