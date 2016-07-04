@@ -1,17 +1,21 @@
 use strict;
 use warnings;
 
-use Test::More tests => 2;
+use Test::More;
 
 use Date::Format qw(time2str);
 use JSON::MaybeXS;
-use String::Errf qw(errf);
+use String::Errf
+  errf => (),
+  errf => { -as => 'errf_u', on_undef => sub { '((undef))' } },
+  errf => { -as => 'errf_f', on_undef => sub {
+    Carp::croak("undef passed to $_[1]{literal}") } };
 
 sub errf_is {
   my ($format, $value, $want, $desc) = @_;
 
   my $have = errf($format, { x => $value });
-  
+
   $desc ||= "$format <- $value ==> $want";
   is($have, $want, $desc);
 }
@@ -81,3 +85,17 @@ subtest "misc. one-off tests" => sub {
     "some inflections",
   );
 };
+
+subtest "undef handling" => sub {
+  is(
+    errf_u("best pie: %{pie}s", { pie => undef }),
+    "best pie: ((undef))",
+  );
+
+  my $error;
+  eval { errf_f("this will die: %{foo}t", { foo => undef }); };
+  $error = $@;
+  like($error, qr/undef passed to %\{foo\}t/);
+};
+
+done_testing;

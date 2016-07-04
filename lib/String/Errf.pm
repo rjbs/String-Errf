@@ -39,6 +39,22 @@ As with most String::Formatter formatters, C<%> is not a format code.  If you
 want a literal C<%>, do not put anything between the two percent signs, just
 write C<%%>.
 
+=head2 UNDEF HANDLING
+
+By default, formatting codes tend to treat C<undef> like Perl does: coercing it
+to an empty string or zero.  This was a bad initial decision and will probably
+change.  A C<on_undef> handler can be provided when importing C<errf> to setup
+a callback for how undefs should be handled.  These two possibilities seem
+useful:
+
+  # Very lax; undefs always turn into the same string:
+  use String::Errf errf => { on_undef => sub { '(undef)' } };
+
+  # Strict; undefs are never valid:
+  use String::Errf errf => { on_undef => sub {
+    Carp::croak("undef passed to $_[1]{literal}") } };
+  } };
+
 =head2 FORMATTING CODES
 
 C<errf> formatting codes I<require> a set of arguments between the C<%> and the
@@ -174,12 +190,24 @@ use Params::Util ();
 use Sub::Exporter -setup => {
   exports => {
     errf => sub {
-      my ($class) = @_;
-      my $fmt = $class->new;
+      my ($class, $name, $arg) = @_;
+      my $fmt = $class->new($arg);
       return sub { $fmt->format(@_) };
     },
   }
 };
+
+sub new {
+  my $class = shift;
+  my $self  = $class->SUPER::new(@_);
+  my $arg   = shift;
+  $self->{'String::Errf'} = {};
+  if ($arg && $arg->{on_undef}) {
+    $self->{'String::Errf'}{on_undef} = $arg->{on_undef};
+  }
+
+  return $self;
+}
 
 sub default_codes {
   return {
@@ -254,6 +282,13 @@ sub __format_errf {
 
   Carp::croak("Unknown conversion in stringf: $hunk->{conversion}")
     unless defined $conv;
+
+  if (
+    ! defined $hunk->{replacement}
+    && (my $on_undef = $self->{'String::Errf'}{on_undef})
+  ) {
+    return $self->$on_undef($hunk);
+  }
 
   return $self->$conv($hunk->{replacement}, $hunk->{args}, $hunk);
 }
