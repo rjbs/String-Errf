@@ -1,6 +1,6 @@
 use strict;
 use warnings;
-package String::Errf; # I really wanted to call it String::Fister.
+package String::Errf;
 
 use String::Formatter 0.102081 ();
 use parent 'String::Formatter';
